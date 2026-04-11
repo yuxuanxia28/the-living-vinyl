@@ -72,8 +72,9 @@
        ═══════════════════════════════════════════════════════ -->
   <a-scene
     id="main-scene"
+    embedded
     vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
+    renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;"
     arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono;">
     <!--
       detectionMode: mono — correct mode for custom pattern (.patt) markers.
@@ -306,17 +307,8 @@
 
         Replace assets/music-placeholder.mp3 with your album track.
       -->
-      <a-entity
-        id="audio-entity"
-        sound="src: #album-audio;
-               autoplay: false;
-               positional: true;
-               loop: true;
-               rolloffFactor: 2;
-               maxDistance: 6;
-               refDistance: 1;"
-        position="0 0 0">
-      </a-entity>
+      <!-- Audio is controlled directly via the HTML audio element in main.js
+           (no A-Frame sound component — avoids conflict with Web Audio AnalyserNode) -->
 
     </a-marker><!-- end a-marker -->
 

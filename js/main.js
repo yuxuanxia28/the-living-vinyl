@@ -335,19 +335,18 @@ document.addEventListener('DOMContentLoaded', function () {
     window.userInteracted = true;
     startBtn.classList.add('hidden');
 
-    // Initialize the Web Audio graph on first user gesture.
-    // createMediaElementSource() requires the gesture to have happened first.
+    // Initialize Web Audio graph (needs a user gesture first)
     initVisualizer();
 
-    // Resume AudioContext — required on iOS before any Web Audio call
-    var audio = document.getElementById('album-audio');
-    var promise = audio.play();
-    if (promise !== undefined) {
-      promise.then(function () {
-        audio.pause();
-        audio.currentTime = 0;
-      }).catch(function () {
-        // Autoplay policy blocked — that's fine, we just needed the gesture
+    // Unlock AudioContext on iOS using a silent 1ms oscillator.
+    // This avoids accidentally starting the album track — unlike audio.play(),
+    // a silent oscillator burst unlocks the context with zero audible output.
+    if (audioCtx) {
+      audioCtx.resume().then(function () {
+        var osc = audioCtx.createOscillator();
+        osc.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.001);
       });
     }
 
@@ -396,12 +395,16 @@ document.addEventListener('DOMContentLoaded', function () {
    5. AUDIO CONTROL
    ═══════════════════════════════════════════════════════════ */
 function startAudio () {
-  var audioEntity   = document.getElementById('audio-entity');
+  var audio         = document.getElementById('album-audio');
   var lyricsOverlay = document.getElementById('lyrics-overlay');
   var disc          = document.getElementById('vinyl-disc');
 
-  if (audioEntity && audioEntity.components.sound) {
-    audioEntity.components.sound.playSound();
+  // Play directly via the HTML audio element
+  if (audio) {
+    audio.loop = true;
+    audio.play().catch(function (e) {
+      console.warn('Audio play blocked:', e);
+    });
   }
 
   window.audioPlaying = true;
@@ -423,13 +426,12 @@ function startAudio () {
 }
 
 function pauseAudio () {
-  var audioEntity   = document.getElementById('audio-entity');
+  var audio         = document.getElementById('album-audio');
   var lyricsOverlay = document.getElementById('lyrics-overlay');
   var disc          = document.getElementById('vinyl-disc');
 
-  if (audioEntity && audioEntity.components.sound) {
-    audioEntity.components.sound.pauseSound();
-  }
+  // Pause directly via the HTML audio element
+  if (audio) audio.pause();
 
   window.audioPlaying = false;
 

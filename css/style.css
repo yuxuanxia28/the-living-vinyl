@@ -13,11 +13,12 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #000;
+  background: transparent;
   font-family: 'Georgia', 'Times New Roman', serif;
 }
 
-/* A-Frame handles its own fullscreen — don't override AR.js video */
+/* Let AR.js own the video layer completely */
+.a-canvas { background: transparent !important; }
 
 /* ── Loading overlay ───────────────────────────────────────── */
 .arjs-loader {
