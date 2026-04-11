@@ -353,27 +353,27 @@ document.addEventListener('DOMContentLoaded', function () {
     if (scanPrompt) scanPrompt.classList.remove('hidden');
   });
 
-  // ── 3b. NFT marker data loaded — hide the spinner ────────────
-  // 'arjs-nft-loaded' fires on the scene after AR.js has fully parsed
-  // the three NFT descriptor files (.fset / .fset3 / .iset). This can
-  // take 5–15 s on first load while the WASM image-matcher initialises.
-  // We also listen to 'arjs-video-loaded' as a fallback for fast loads.
-  function hideLoader () {
+  // ── 3b. Pattern marker loaded — hide the spinner ─────────────
+  // Pattern markers load instantly (tiny .patt file, no WASM parsing).
+  // 'arjs-video-loaded' fires when the camera feed is live and tracking starts.
+  scene.addEventListener('arjs-video-loaded', function () {
     if (loader && loader.parentNode) {
       loader.style.transition = 'opacity 0.5s';
       loader.style.opacity = '0';
       setTimeout(function () { if (loader && loader.parentNode) loader.remove(); }, 500);
     }
-  }
+  });
 
-  scene.addEventListener('arjs-nft-loaded',   hideLoader);
-  scene.addEventListener('arjs-video-loaded', hideLoader);
+  // Fallback: hide loader after 8 s if event never fires
+  setTimeout(function () {
+    if (loader && loader.parentNode) {
+      loader.style.transition = 'opacity 0.5s';
+      loader.style.opacity = '0';
+      setTimeout(function () { if (loader && loader.parentNode) loader.remove(); }, 500);
+    }
+  }, 8000);
 
-  // Hard fallback: if neither event fires within 20 s (e.g. missing files),
-  // remove the loader so the camera feed is at least visible.
-  setTimeout(hideLoader, 20000);
-
-  // ── 3c. Tracking events (same event names for NFT and pattern) ──
+  // ── 3c. NFT tracking events ─────────────────────────────────
   nft.addEventListener('markerFound', function () {
     if (!window.userInteracted) return;
     startAudio();
