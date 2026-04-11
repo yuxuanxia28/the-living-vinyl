@@ -18,7 +18,7 @@
     3. Our JS   — registers custom AFRAME components (must be before <body> is parsed)
   -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
   <script src="js/lyrics-data.js"></script>
   <script src="js/main.js"></script>
 </head>
@@ -34,7 +34,7 @@
   <div class="arjs-loader">
     <div class="arjs-loader__title">The Living Vinyl</div>
     <div class="arjs-loader__spinner"></div>
-    <div class="arjs-loader__text">Loading marker data…<br>Point your camera at the album cover when ready.</div>
+    <div class="arjs-loader__text">Loading image tracker…<br>This takes 5–15 s on first load.<br>Point camera at the album cover when ready.</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
@@ -75,7 +75,7 @@
     embedded
     vr-mode-ui="enabled: false"
     renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true; alpha: true;"
-    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono;">
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
     <!--
       detectionMode: mono — correct mode for custom pattern (.patt) markers.
       mono_and_matrix was for barcode markers, not needed here.
@@ -132,10 +132,10 @@
          generator or print the bordered image — without the
          black frame the pattern detector won't lock on.
          ═══════════════════════════════════════════════════ -->
-    <a-marker
+    <a-nft
       id="cover-nft"
-      type="pattern"
-      url="assets/markers/cover.patt"
+      type="nft"
+      url="assets/markers/cover"
       smooth="true"
       smoothCount="10"
       smoothTolerance="0.01"
@@ -310,7 +310,7 @@
       <!-- Audio is controlled directly via the HTML audio element in main.js
            (no A-Frame sound component — avoids conflict with Web Audio AnalyserNode) -->
 
-    </a-marker><!-- end a-marker -->
+    </a-nft><!-- end a-nft -->
 
     <!-- ═══════════════════════════════════════════════════
          CAMERA

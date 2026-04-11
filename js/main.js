@@ -353,30 +353,27 @@ document.addEventListener('DOMContentLoaded', function () {
     if (scanPrompt) scanPrompt.classList.remove('hidden');
   });
 
-  // ── 3b. Pattern marker loaded — hide the spinner ─────────────
-  // For pattern markers, AR.js initialises very quickly (no network
-  // fetch needed — the .patt file is tiny). We listen for 'arjs-video-loaded'
-  // on the scene (fires when the camera feed is active and tracking starts),
-  // falling back to the 8-second timeout if the event never arrives.
-  scene.addEventListener('arjs-video-loaded', function () {
-    if (loader) {
-      loader.style.transition = 'opacity 0.5s';
-      loader.style.opacity = '0';
-      setTimeout(function () { if (loader) loader.remove(); }, 500);
-    }
-  });
-
-  // Fallback: if the event never fires (missing marker files),
-  // hide the loader after 8 seconds so the camera feed is visible
-  setTimeout(function () {
+  // ── 3b. NFT marker data loaded — hide the spinner ────────────
+  // 'arjs-nft-loaded' fires on the scene after AR.js has fully parsed
+  // the three NFT descriptor files (.fset / .fset3 / .iset). This can
+  // take 5–15 s on first load while the WASM image-matcher initialises.
+  // We also listen to 'arjs-video-loaded' as a fallback for fast loads.
+  function hideLoader () {
     if (loader && loader.parentNode) {
       loader.style.transition = 'opacity 0.5s';
       loader.style.opacity = '0';
       setTimeout(function () { if (loader && loader.parentNode) loader.remove(); }, 500);
     }
-  }, 8000);
+  }
 
-  // ── 3c. NFT tracking events ─────────────────────────────────
+  scene.addEventListener('arjs-nft-loaded',   hideLoader);
+  scene.addEventListener('arjs-video-loaded', hideLoader);
+
+  // Hard fallback: if neither event fires within 20 s (e.g. missing files),
+  // remove the loader so the camera feed is at least visible.
+  setTimeout(hideLoader, 20000);
+
+  // ── 3c. Tracking events (same event names for NFT and pattern) ──
   nft.addEventListener('markerFound', function () {
     if (!window.userInteracted) return;
     startAudio();
