@@ -17,22 +17,7 @@ html, body {
   font-family: 'Georgia', 'Times New Roman', serif;
 }
 
-a-scene {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* AR.js injects a canvas + video — keep them fullscreen */
-canvas, video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-}
+/* A-Frame handles its own fullscreen — don't override AR.js video */
 
 /* ── Loading overlay ───────────────────────────────────────── */
 .arjs-loader {
