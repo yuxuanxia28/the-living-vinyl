@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Outer black vinyl -->
+  <circle cx="256" cy="256" r="256" fill="#111"/>
+  <!-- Groove rings -->
+  <circle cx="256" cy="256" r="240" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#1c1c1c" stroke-width="3"/>
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#1c1c1c" stroke-width="3"/>
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#1a1a1a" stroke-width="4"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#1c1c1c" stroke-width="3"/>
+  <!-- Center label -->
+  <circle cx="256" cy="256" r="110" fill="#1a237e"/>
+  <circle cx="256" cy="256" r="108" fill="none" stroke="#283593" stroke-width="2"/>
+  <text x="256" y="245" text-anchor="middle" fill="#fff" font-family="serif" font-size="22" font-weight="bold">THE LIVING</text>
+  <text x="256" y="272" text-anchor="middle" fill="#e8c97a" font-family="serif" font-size="18">VINYL</text>
+  <text x="256" y="295" text-anchor="middle" fill="#9fa8da" font-family="sans-serif" font-size="11">SIDE A</text>
+  <!-- Center hole -->
+  <circle cx="256" cy="256" r="12" fill="#000"/>
+</svg>

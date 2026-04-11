@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>The Living Vinyl</title>
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <!--
+    SCRIPT LOAD ORDER — DO NOT REARRANGE
+    ─────────────────────────────────────
+    1. A-Frame  — registers <a-scene> and all primitives as custom HTML elements
+    2. AR.js    — aframe-ar.js: full build supporting pattern (.patt) markers
+                  (switched from aframe-ar-nft.js — pattern files don't need NFT)
+    3. Our JS   — registers custom AFRAME components (must be before <body> is parsed)
+  -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="js/lyrics-data.js"></script>
+  <script src="js/main.js"></script>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LOADING OVERLAY
+       Shown while AR.js downloads and parses the NFT marker
+       descriptor files (.fset / .fset3 / .iset).
+       Removed automatically via the arjs-nft-loaded event.
+       ═══════════════════════════════════════════════════════ -->
+  <div class="arjs-loader">
+    <div class="arjs-loader__title">The Living Vinyl</div>
+    <div class="arjs-loader__spinner"></div>
+    <div class="arjs-loader__text">Loading marker data…<br>Point your camera at the album cover when ready.</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ROLLING LYRICS OVERLAY
+       Position: fixed, above the AR canvas, pointer-events none.
+       The inner #lyrics-scroller div is replaced by JS each time
+       a new lyric line triggers — this re-fires the CSS animation.
+       ═══════════════════════════════════════════════════════ -->
+  <div id="lyrics-overlay" class="lyrics-overlay hidden">
+    <div id="lyrics-scroller" class="lyrics-scroller"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       WAVEFORM VISUALIZER
+       2D canvas overlay drawn by the Web Audio AnalyserNode.
+       Sits above the AR canvas, pointer-events none so touches
+       still reach the 3D scene. Hidden until audio starts.
+       ═══════════════════════════════════════════════════════ -->
+  <canvas id="visualizer" class="visualizer hidden"></canvas>
+
+  <!-- Scan prompt — visible after TAP TO BEGIN, hides on first detection -->
+  <p id="scan-prompt" class="scan-prompt hidden">Point camera at album cover</p>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TAP TO BEGIN
+       This button satisfies the iOS/Chrome autoplay policy.
+       Audio.play() requires a prior user gesture — tapping this
+       button counts. Also unlocks the Web Audio context.
+       ═══════════════════════════════════════════════════════ -->
+  <button id="start-btn" class="start-btn">Tap to Begin</button>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       A-FRAME AR SCENE
+       ═══════════════════════════════════════════════════════ -->
+  <a-scene
+    id="main-scene"
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono;">
+    <!--
+      detectionMode: mono — correct mode for custom pattern (.patt) markers.
+      mono_and_matrix was for barcode markers, not needed here.
+    -->
+
+    <!-- ── Asset preloading ──────────────────────────────── -->
+    <a-assets timeout="10000">
+      <audio  id="album-audio"
+              src="assets/music.mp3"
+              preload="auto"
+              crossorigin="anonymous">
+      </audio>
+      <img    id="cover-img"
+              src="assets/cover.jpg"
+              crossorigin="anonymous">
+      <img    id="vinyl-label-img"
+              src="assets/vinyl-label.svg"
+              crossorigin="anonymous">
+    </a-assets>
+
+    <!-- ── Scene-level lights (outside a-marker) ─────────────── -->
+    <!--
+      Ambient: fills shadows so the cover art isn't pitch-black.
+      Directional: gives the vinyl disc its metallic sheen highlight.
+      Note: do NOT enable shadow casting — it's expensive on mobile.
+    -->
+    <a-entity
+      id="ambient-light"
+      light="type: ambient; color: #ffffff; intensity: 1.0">
+    </a-entity>
+    <a-entity
+      light="type: directional; color: #ffe8c0; intensity: 0.7"
+      position="1 3 2">
+    </a-entity>
+
+    <!-- ═══════════════════════════════════════════════════
+         PATTERN MARKER TARGET
+         AR.js recognises the black-bordered pattern marker
+         and reparents all child entities to its detected
+         pose every frame.
+
+         type="pattern" + url: points to the .patt descriptor
+         file (White_Feather hawk Tail Deer Hunter cover art).
+         The .patt format encodes the marker's 16×16 pixel
+         pattern in 4 orientations so detection works at any
+         rotation.
+
+         smooth: reduces jitter — same values used in the
+         official AR.js examples.
+
+         IMPORTANT FOR PRINTING:
+         The physical marker MUST have a thick black border
+         around the cover art image. Use the AR.js marker
+         generator or print the bordered image — without the
+         black frame the pattern detector won't lock on.
+         ═══════════════════════════════════════════════════ -->
+    <a-marker
+      id="cover-nft"
+      type="pattern"
+      url="assets/markers/cover.patt"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+      emitevents="true">
+
+      <!--
+        COORDINATE SYSTEM inside a-marker:
+          X → right along the cover width
+          Y → up along the cover height
+          Z → toward the viewer (positive = closer to camera)
+
+        The cover's physical center is at (0, 0, 0).
+        AR.js scales 1 world unit ≈ 1 cm at typical phone distances,
+        but this varies. Tweak the sizes/positions to match your cover.
+      -->
+
+      <!-- ─── THE HAUNT: depth-popped cover layers ──────────
+           Background plane: the full cover art pushed back in Z.
+           Foreground plane: cropped/cutout of the key figure at z=0.
+
+           In production:
+             • Replace #cover-img src with a high-res version of your cover
+             • Create a transparent PNG of the foreground figure and use
+               that as the fg-figure src (material="transparent: true")
+      ──────────────────────────────────────────────────────── -->
+
+      <!-- Background — recedes into the scene for depth illusion -->
+      <a-plane
+        id="bg-plane"
+        width="1.4"
+        height="1.4"
+        position="0 0 -5"
+        rotation="0 0 0"
+        material="shader: flat; src: #cover-img; side: double; transparent: false;">
+      </a-plane>
+
+      <!-- Foreground figure — sits flush with the marker surface -->
+      <!--
+        In production: swap src for a PNG with transparent background
+        so only the artist/figure is visible at z=0.
+        The current placeholder just dims the image slightly.
+      -->
+      <a-plane
+        id="fg-figure"
+        width="0.6"
+        height="0.9"
+        position="0 0.05 0.001"
+        material="shader: flat; src: #cover-img; transparent: true; alphaTest: 0.3; opacity: 0.85; side: double;">
+      </a-plane>
+
+      <!-- ─── THE ORBIT: floating lyric / credit fragments ───
+           Three a-text entities orbit the cover on an elliptical
+           path via the custom orbit-text component.
+
+           phase offsets (in radians) spread them evenly:
+             0 rad = 0°    (right side)
+             2.09 rad ≈ 120° (lower-left)
+             4.19 rad ≈ 240° (upper-left)
+
+           To add more fragments: duplicate an a-text entity and
+           give it a different phase value.
+      ──────────────────────────────────────────────────────── -->
+
+      <a-text
+        orbit-text="radius: 0.85; speed: 0.38; phase: 0.0; height: 0.15; bob: 0.05"
+        value="SIDE A"
+        color="#e8c97a"
+        align="center"
+        width="2.5"
+        wrap-count="15"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt">
+      </a-text>
+
+      <a-text
+        orbit-text="radius: 0.85; speed: 0.33; phase: 2.09; height: -0.08; bob: 0.04"
+        value="Track 01"
+        color="#c0a0ff"
+        align="center"
+        width="2.5"
+        wrap-count="15"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt">
+      </a-text>
+
+      <a-text
+        orbit-text="radius: 0.90; speed: 0.42; phase: 4.19; height: 0.28; bob: 0.06"
+        value="\u2117 2024"
+        color="#ff8a80"
+        align="center"
+        width="2.5"
+        wrap-count="15"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt">
+      </a-text>
+
+      <!-- ─── THE B-SIDE: tap target for day/night toggle ────
+           A small semi-transparent plane over the bottom-left of
+           the cover (where the artist image typically lives).
+           The pulsing opacity animation signals it's interactive.
+           The b-side-toggle component handles the click/tap logic.
+      ──────────────────────────────────────────────────────── -->
+      <a-plane
+        id="artist-tap"
+        width="0.32"
+        height="0.32"
+        position="-0.38 -0.38 0.005"
+        material="shader: flat; src: #cover-img; opacity: 0.7; side: double; transparent: true;"
+        b-side-toggle>
+      </a-plane>
+
+      <!-- Small label above the tap target -->
+      <a-text
+        value="B-SIDE"
+        position="-0.38 -0.22 0.01"
+        color="#e8c97a"
+        align="center"
+        width="1.0"
+        wrap-count="8"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt">
+      </a-text>
+
+      <!-- ─── THE VINYL DISC: spinning 3D record ─────────────
+           A flat cylinder (height: 0.014 = ~14mm) with vinyl
+           label texture on top and metallic-black sides.
+
+           Positioned to the right of the cover, slightly elevated.
+           The animation__spin attribute uses A-Frame's multi-animation
+           naming (animation__[name]) so other animations can coexist.
+
+           startEvents: vinyl-play   — emitted by startAudio() in main.js
+           pauseEvents: vinyl-pause  — emitted by pauseAudio() in main.js
+
+           360° Y rotation in 3000ms = 33⅓ rpm (like a real 12" record).
+      ──────────────────────────────────────────────────────── -->
+
+      <!-- Main vinyl disc body -->
+      <a-cylinder
+        id="vinyl-disc"
+        radius="0.22"
+        height="0.014"
+        position="0.52 -0.28 0.12"
+        segments-radial="48"
+        material="src: #vinyl-label-img; metalness: 0.65; roughness: 0.25; color: #ffffff; side: double;"
+        animation__spin="property: object3D.rotation.y;
+                          from: 0; to: 360;
+                          loop: true;
+                          dur: 1800;
+                          easing: linear;
+                          autoplay: false;
+                          startEvents: vinyl-play;
+                          pauseEvents: vinyl-pause;">
+      </a-cylinder>
+
+      <!-- Vinyl disc — black outer edge (thin torus gives a groove rim) -->
+      <a-torus
+        radius="0.22"
+        radius-tubular="0.008"
+        position="0.52 -0.28 0.12"
+        rotation="0 0 90"
+        segments-tubular="24"
+        material="color: #111111; metalness: 0.8; roughness: 0.2;">
+      </a-torus>
+
+      <!-- ─── SPATIAL AUDIO ────────────────────────────────── -->
+      <!--
+        Positional audio anchored to the cover center.
+        autoplay: false — triggered by markerFound via main.js.
+        loop: true — album loops while cover is visible.
+        rolloffFactor: 2 — volume fades naturally as viewer moves back.
+
+        Replace assets/music-placeholder.mp3 with your album track.
+      -->
+      <a-entity
+        id="audio-entity"
+        sound="src: #album-audio;
+               autoplay: false;
+               positional: true;
+               loop: true;
+               rolloffFactor: 2;
+               maxDistance: 6;
+               refDistance: 1;"
+        position="0 0 0">
+      </a-entity>
+
+    </a-marker><!-- end a-marker -->
+
+    <!-- ═══════════════════════════════════════════════════
+         CAMERA
+         Must be a SIBLING of <a-marker>, not a child.
+         Placing it inside <a-marker> would make it track with
+         the marker — the entire scene would move with the cover.
+
+         The child cursor entity enables touch/click raycasting
+         so the b-side-toggle tap target responds to touches.
+         objects: '[b-side-toggle]' limits raycasting to only
+         that entity, avoiding spurious hits on other planes.
+         ═══════════════════════════════════════════════════ -->
+    <a-entity camera>
+      <a-entity
+        cursor="fuse: false; rayOrigin: mouse"
+        raycaster="objects: [b-side-toggle]; far: 20; interval: 100;">
+      </a-entity>
+    </a-entity>
+
+  </a-scene><!-- end a-scene -->
+
+</body>
+</html>
