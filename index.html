@@ -64,10 +64,14 @@
        to the AR scene underneath.
        ═══════════════════════════════════════════════════════ -->
   <div id="gramophone-overlay" class="gramophone-overlay hidden">
+    <!-- The iframe renders the 3D gramophone animation.
+         pointer-events on the iframe are intentionally kept default so
+         the click-shield div above it is what catches all user taps. -->
     <iframe
       title="Gramophone Animated"
       frameborder="0"
       allowfullscreen
+      allowtransparency="true"
       mozallowfullscreen="true"
       webkitallowfullscreen="true"
       allow="autoplay; fullscreen; xr-spatial-tracking"
@@ -77,6 +81,11 @@
       web-share
       src="https://sketchfab.com/models/8dbc3e99e1ea4ff0a8f32d39c72c4d8d/embed?preload=1&autostart=1&transparent=1&ui_theme=dark&ui_controls=0&ui_infos=0&ui_stop=0">
     </iframe>
+    <!-- Transparent div layered on top of the iframe.
+         Catches tap/click events so we can toggle audio.
+         The iframe itself swallows all pointer events — this shield
+         is the only reliable way to detect a tap on the model. -->
+    <div id="gramophone-click" class="gramophone-click-shield"></div>
   </div>
 
   <!-- Scan prompt — visible after TAP TO BEGIN, hides on first detection -->
@@ -164,7 +173,8 @@
       smoothCount="10"
       smoothTolerance="0.01"
       smoothThreshold="5"
-      emitevents="true">
+      emitevents="true"
+      gramophone-tracker>
 
       <!--
         COORDINATE SYSTEM inside a-marker:

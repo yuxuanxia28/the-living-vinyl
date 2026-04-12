@@ -53,6 +53,61 @@ AFRAME.registerComponent('orbit-text', {
 
 
 /* ═══════════════════════════════════════════════════════════
+   2. GRAMOPHONE TRACKER COMPONENT
+   Projects the <a-marker> world position onto screen pixels
+   each frame so the Sketchfab iframe overlay tracks the
+   physical marker spatially, appearing to sit on the cover.
+
+   Algorithm each tick():
+     1. Get marker's world position (THREE.Vector3)
+     2. Record distance to camera (for size scaling)
+     3. Project world position → NDC (-1…1) via camera matrix
+     4. Convert NDC → CSS pixels
+     5. Apply to the overlay's inline style (left / top / width / height)
+   ═══════════════════════════════════════════════════════════ */
+AFRAME.registerComponent('gramophone-tracker', {
+  init: function () {
+    this._worldPos  = new THREE.Vector3();
+    this._camPos    = new THREE.Vector3();
+  },
+
+  tick: function () {
+    var overlay = document.getElementById('gramophone-overlay');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+
+    var scene  = this.el.sceneEl;
+    var camera = scene.camera;
+    if (!camera) return;
+
+    // 1. Marker world position
+    this.el.object3D.getWorldPosition(this._worldPos);
+
+    // 2. Camera world position → distance for size scaling
+    camera.getWorldPosition(this._camPos);
+    var dist = this._camPos.distanceTo(this._worldPos);
+
+    // 3. Project to NDC space
+    var ndc = this._worldPos.clone().project(camera);
+
+    // Skip if marker is behind the camera
+    if (ndc.z > 1) return;
+
+    // 4. NDC → CSS pixels
+    var screenX = Math.round((ndc.x  *  0.5 + 0.5) * window.innerWidth);
+    var screenY = Math.round((-ndc.y *  0.5 + 0.5) * window.innerHeight);
+
+    // 5. Scale inversely with distance (clamp to sensible range)
+    var size = Math.round(Math.min(Math.max(140, 200 / Math.max(dist, 0.25)), 320));
+
+    overlay.style.left   = (screenX - size / 2) + 'px';
+    overlay.style.top    = (screenY - size / 2) + 'px';
+    overlay.style.width  = size + 'px';
+    overlay.style.height = size + 'px';
+  }
+});
+
+
+/* ═══════════════════════════════════════════════════════════
    2. B-SIDE-TOGGLE COMPONENT
    Tap the element to flip between day and night palette.
    Affects: body class, scene background, ambient light,
@@ -330,7 +385,20 @@ document.addEventListener('DOMContentLoaded', function () {
   var scanPrompt     = document.getElementById('scan-prompt');
   var loader         = document.querySelector('.arjs-loader');
 
-  // ── 4a. Tap-to-start (iOS AudioContext unlock + visualizer init) ──
+  // ── 4a. Gramophone click-shield — tap model to pause / resume ──
+  var gramophoneClick = document.getElementById('gramophone-click');
+  if (gramophoneClick) {
+    gramophoneClick.addEventListener('click', function () {
+      if (window.audioPlaying) {
+        pauseAudio();
+      } else if (window.userInteracted) {
+        // Marker is still visible — user tapped to resume
+        startAudio();
+      }
+    });
+  }
+
+  // ── 4b. Tap-to-start (iOS AudioContext unlock + visualizer init) ──
   startBtn.addEventListener('click', function () {
     window.userInteracted = true;
     startBtn.classList.add('hidden');

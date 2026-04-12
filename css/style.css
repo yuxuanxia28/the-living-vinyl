@@ -200,34 +200,58 @@ body.night-mode .lyrics-scroller {
 
 /* ── Sketchfab gramophone overlay ─────────────────────────── */
 /*
- * Floats in the top-right corner while audio plays.
- * pointer-events: none lets AR touches pass through.
- * The iframe itself is transparent (Sketchfab transparent=1),
- * so only the 3D model is visible over the camera feed.
+ * Position is driven entirely by gramophone-tracker in main.js,
+ * which projects the <a-marker> world position to screen coords
+ * each frame so the overlay tracks the physical marker spatially.
+ *
+ * The wrapper allows pointer-events so the click-shield div
+ * inside it can receive tap events.
+ * The iframe itself is transparent (Sketchfab transparent=1 +
+ * allowtransparency) — only the 3D model floats over the camera.
  */
 .gramophone-overlay {
   position: fixed;
-  top: 20px;
-  right: 16px;
   z-index: 700;
-  width: 190px;
-  height: 190px;
-  border-radius: 12px;
+  width: 220px;          /* initial fallback; JS updates width/height */
+  height: 220px;
+  border-radius: 16px;
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: auto;  /* must be auto so click-shield works */
   opacity: 1;
-  transition: opacity 0.6s ease;
+  transition: opacity 0.5s ease;
+  /* JS sets left/top every frame via inline style */
 }
 
 .gramophone-overlay iframe {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   border: none;
   background: transparent;
+  pointer-events: none;  /* shield div intercepts all taps */
+}
+
+/* Transparent div sitting above the iframe — catches all taps */
+.gramophone-click-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+  cursor: pointer;
+  /* Subtle ring that pulses to signal interactivity */
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 2px rgba(232, 201, 122, 0.0);
+  transition: box-shadow 0.2s;
+}
+
+.gramophone-click-shield:active {
+  box-shadow: inset 0 0 0 2px rgba(232, 201, 122, 0.6);
 }
 
 .gramophone-overlay.hidden {
   opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Day / Night mode palette ──────────────────────────────── */
