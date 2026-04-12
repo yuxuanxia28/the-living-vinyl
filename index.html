@@ -15,16 +15,17 @@
 
 <body>
 
+  <!-- Loading screen -->
   <div class="arjs-loader">
     <div class="arjs-loader__title">The Living Vinyl</div>
     <div class="arjs-loader__spinner"></div>
     <div class="arjs-loader__text">Loading…<br>Point your camera at the album cover when ready.</div>
   </div>
 
-  <div id="lyrics-overlay" class="lyrics-overlay hidden">
-    <div id="lyrics-scroller" class="lyrics-scroller"></div>
-  </div>
+  <!-- Particle canvas: snowflakes (always) + lyric particles (while playing) -->
+  <canvas id="particle-canvas"></canvas>
 
+  <!-- Waveform visualizer -->
   <canvas id="visualizer" class="visualizer hidden"></canvas>
 
   <p id="scan-prompt" class="scan-prompt hidden">Point camera at album cover</p>
@@ -46,10 +47,7 @@
       id="cover-marker"
       type="pattern"
       url="assets/markers/cover.patt"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance="0.01"
-      smoothThreshold="5"
+      smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5"
       emitevents="true">
     </a-marker>
 
