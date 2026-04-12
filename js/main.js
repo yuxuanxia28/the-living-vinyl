@@ -9,106 +9,7 @@
  */
 
 /* ═══════════════════════════════════════════════════════════
-   1. ORBIT-TEXT COMPONENT
-   Animates a-text entities in a slow elliptical orbit
-   around the album cover center, always facing the camera.
-   ═══════════════════════════════════════════════════════════ */
-AFRAME.registerComponent('orbit-text', {
-  schema: {
-    radius:  { type: 'number', default: 0.8 },   // orbit radius (world units = meters at 1:1)
-    speed:   { type: 'number', default: 0.4 },   // radians per second
-    phase:   { type: 'number', default: 0 },      // starting angle (radians) — spread entities evenly
-    height:  { type: 'number', default: 0 },      // vertical offset from cover center
-    bob:     { type: 'number', default: 0.04 }    // gentle vertical bob amplitude
-  },
-
-  init: function () {
-    this.angle = this.data.phase;
-  },
-
-  tick: function (time, timeDelta) {
-    // timeDelta is ms since last frame — convert to seconds for frame-rate independence
-    var dt = timeDelta / 1000;
-    this.angle += this.data.speed * dt;
-
-    var d = this.data;
-    // Elliptical orbit: full radius on X, compressed on Z for perspective readability
-    var x = Math.cos(this.angle) * d.radius;
-    var z = Math.sin(this.angle) * d.radius * 0.35;
-    // Slow bob on Y using half the angular speed for a gentle wave
-    var y = d.height + Math.sin(this.angle * 0.5) * d.bob;
-
-    this.el.object3D.position.set(x, y, z);
-
-    // Billboard: text always faces the camera.
-    // In AR.js the camera stays at world origin; the scene is moved.
-    // lookAt a point far down the +Z axis keeps the text facing forward.
-    this.el.object3D.lookAt(new THREE.Vector3(
-      this.el.object3D.position.x,
-      this.el.object3D.position.y,
-      1000
-    ));
-  }
-});
-
-
-/* ═══════════════════════════════════════════════════════════
-   2. GRAMOPHONE TRACKER COMPONENT
-   Projects the <a-marker> world position onto screen pixels
-   each frame so the Sketchfab iframe overlay tracks the
-   physical marker spatially, appearing to sit on the cover.
-
-   Algorithm each tick():
-     1. Get marker's world position (THREE.Vector3)
-     2. Record distance to camera (for size scaling)
-     3. Project world position → NDC (-1…1) via camera matrix
-     4. Convert NDC → CSS pixels
-     5. Apply to the overlay's inline style (left / top / width / height)
-   ═══════════════════════════════════════════════════════════ */
-AFRAME.registerComponent('gramophone-tracker', {
-  init: function () {
-    this._worldPos  = new THREE.Vector3();
-    this._camPos    = new THREE.Vector3();
-  },
-
-  tick: function () {
-    var overlay = document.getElementById('gramophone-overlay');
-    if (!overlay || overlay.classList.contains('hidden')) return;
-
-    var scene  = this.el.sceneEl;
-    var camera = scene.camera;
-    if (!camera) return;
-
-    // 1. Marker world position
-    this.el.object3D.getWorldPosition(this._worldPos);
-
-    // 2. Camera world position → distance for size scaling
-    camera.getWorldPosition(this._camPos);
-    var dist = this._camPos.distanceTo(this._worldPos);
-
-    // 3. Project to NDC space
-    var ndc = this._worldPos.clone().project(camera);
-
-    // Skip if marker is behind the camera
-    if (ndc.z > 1) return;
-
-    // 4. NDC → CSS pixels
-    var screenX = Math.round((ndc.x  *  0.5 + 0.5) * window.innerWidth);
-    var screenY = Math.round((-ndc.y *  0.5 + 0.5) * window.innerHeight);
-
-    // 5. Scale inversely with distance (clamp to sensible range)
-    var size = Math.round(Math.min(Math.max(140, 200 / Math.max(dist, 0.25)), 320));
-
-    overlay.style.left   = (screenX - size / 2) + 'px';
-    overlay.style.top    = (screenY - size / 2) + 'px';
-    overlay.style.width  = size + 'px';
-    overlay.style.height = size + 'px';
-  }
-});
-
-
-/* ═══════════════════════════════════════════════════════════
-   2. B-SIDE-TOGGLE COMPONENT
+   1. B-SIDE-TOGGLE COMPONENT
    Tap the element to flip between day and night palette.
    Affects: body class, scene background, ambient light,
             orbit text colors, and lyrics overlay glow.
@@ -385,20 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var scanPrompt     = document.getElementById('scan-prompt');
   var loader         = document.querySelector('.arjs-loader');
 
-  // ── 4a. Gramophone click-shield — tap model to pause / resume ──
-  var gramophoneClick = document.getElementById('gramophone-click');
-  if (gramophoneClick) {
-    gramophoneClick.addEventListener('click', function () {
-      if (window.audioPlaying) {
-        pauseAudio();
-      } else if (window.userInteracted) {
-        // Marker is still visible — user tapped to resume
-        startAudio();
-      }
-    });
-  }
-
-  // ── 4b. Tap-to-start (iOS AudioContext unlock + visualizer init) ──
+  // ── 4a. Tap-to-start (iOS AudioContext unlock + visualizer init) ──
   startBtn.addEventListener('click', function () {
     window.userInteracted = true;
     startBtn.classList.add('hidden');
@@ -463,7 +351,6 @@ function startAudio () {
   var audio         = document.getElementById('album-audio');
   var lyricsOverlay = document.getElementById('lyrics-overlay');
   var disc          = document.getElementById('vinyl-disc');
-  var gramophone    = document.getElementById('gramophone-overlay');
 
   // Play directly via the HTML audio element
   if (audio) {
@@ -481,9 +368,6 @@ function startAudio () {
   // Show lyrics overlay
   if (lyricsOverlay) lyricsOverlay.classList.remove('hidden');
 
-  // Show gramophone
-  if (gramophone) gramophone.classList.remove('hidden');
-
   // Start waveform visualizer
   startVisualizer();
 
@@ -498,7 +382,6 @@ function pauseAudio () {
   var audio         = document.getElementById('album-audio');
   var lyricsOverlay = document.getElementById('lyrics-overlay');
   var disc          = document.getElementById('vinyl-disc');
-  var gramophone    = document.getElementById('gramophone-overlay');
 
   // Pause directly via the HTML audio element
   if (audio) audio.pause();
@@ -510,9 +393,6 @@ function pauseAudio () {
 
   // Hide lyrics
   if (lyricsOverlay) lyricsOverlay.classList.add('hidden');
-
-  // Hide gramophone
-  if (gramophone) gramophone.classList.add('hidden');
 
   // Stop and clear the waveform visualizer
   stopVisualizer();

@@ -55,39 +55,6 @@
        ═══════════════════════════════════════════════════════ -->
   <canvas id="visualizer" class="visualizer hidden"></canvas>
 
-  <!-- ═══════════════════════════════════════════════════════
-       SKETCHFAB — GRAMOPHONE OVERLAY
-       Shown only while audio is playing; hidden otherwise.
-       autostart=1 starts the animation automatically.
-       transparent=1 + ui_theme=dark keeps it clean over the camera.
-       pointer-events: none on the wrapper so touches pass through
-       to the AR scene underneath.
-       ═══════════════════════════════════════════════════════ -->
-  <div id="gramophone-overlay" class="gramophone-overlay hidden">
-    <!-- The iframe renders the 3D gramophone animation.
-         pointer-events on the iframe are intentionally kept default so
-         the click-shield div above it is what catches all user taps. -->
-    <iframe
-      title="Gramophone Animated"
-      frameborder="0"
-      allowfullscreen
-      allowtransparency="true"
-      mozallowfullscreen="true"
-      webkitallowfullscreen="true"
-      allow="autoplay; fullscreen; xr-spatial-tracking"
-      xr-spatial-tracking
-      execution-while-out-of-viewport
-      execution-while-not-rendered
-      web-share
-      src="https://sketchfab.com/models/8dbc3e99e1ea4ff0a8f32d39c72c4d8d/embed?preload=1&autostart=1&transparent=1&ui_theme=dark&ui_controls=0&ui_infos=0&ui_stop=0">
-    </iframe>
-    <!-- Transparent div layered on top of the iframe.
-         Catches tap/click events so we can toggle audio.
-         The iframe itself swallows all pointer events — this shield
-         is the only reliable way to detect a tap on the model. -->
-    <div id="gramophone-click" class="gramophone-click-shield"></div>
-  </div>
-
   <!-- Scan prompt — visible after TAP TO BEGIN, hides on first detection -->
   <p id="scan-prompt" class="scan-prompt hidden">Point camera at album cover</p>
 
@@ -173,8 +140,7 @@
       smoothCount="10"
       smoothTolerance="0.01"
       smoothThreshold="5"
-      emitevents="true"
-      gramophone-tracker>
+      emitevents="true">
 
       <!--
         COORDINATE SYSTEM inside a-marker:
@@ -220,49 +186,6 @@
         position="0 0.05 0.001"
         material="shader: flat; src: #cover-img; transparent: true; alphaTest: 0.3; opacity: 0.85; side: double;">
       </a-plane>
-
-      <!-- ─── THE ORBIT: floating lyric / credit fragments ───
-           Three a-text entities orbit the cover on an elliptical
-           path via the custom orbit-text component.
-
-           phase offsets (in radians) spread them evenly:
-             0 rad = 0°    (right side)
-             2.09 rad ≈ 120° (lower-left)
-             4.19 rad ≈ 240° (upper-left)
-
-           To add more fragments: duplicate an a-text entity and
-           give it a different phase value.
-      ──────────────────────────────────────────────────────── -->
-
-      <a-text
-        orbit-text="radius: 0.85; speed: 0.38; phase: 0.0; height: 0.15; bob: 0.05"
-        value="SIDE A"
-        color="#e8c97a"
-        align="center"
-        width="2.5"
-        wrap-count="15"
->
-      </a-text>
-
-      <a-text
-        orbit-text="radius: 0.85; speed: 0.33; phase: 2.09; height: -0.08; bob: 0.04"
-        value="Track 01"
-        color="#c0a0ff"
-        align="center"
-        width="2.5"
-        wrap-count="15"
->
-      </a-text>
-
-      <a-text
-        orbit-text="radius: 0.90; speed: 0.42; phase: 4.19; height: 0.28; bob: 0.06"
-        value="\u2117 2024"
-        color="#ff8a80"
-        align="center"
-        width="2.5"
-        wrap-count="15"
->
-      </a-text>
 
       <!-- ─── THE B-SIDE: tap target for day/night toggle ────
            A small semi-transparent plane over the bottom-left of
