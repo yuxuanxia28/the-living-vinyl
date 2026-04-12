@@ -55,6 +55,30 @@
        ═══════════════════════════════════════════════════════ -->
   <canvas id="visualizer" class="visualizer hidden"></canvas>
 
+  <!-- ═══════════════════════════════════════════════════════
+       SKETCHFAB — GRAMOPHONE OVERLAY
+       Shown only while audio is playing; hidden otherwise.
+       autostart=1 starts the animation automatically.
+       transparent=1 + ui_theme=dark keeps it clean over the camera.
+       pointer-events: none on the wrapper so touches pass through
+       to the AR scene underneath.
+       ═══════════════════════════════════════════════════════ -->
+  <div id="gramophone-overlay" class="gramophone-overlay hidden">
+    <iframe
+      title="Gramophone Animated"
+      frameborder="0"
+      allowfullscreen
+      mozallowfullscreen="true"
+      webkitallowfullscreen="true"
+      allow="autoplay; fullscreen; xr-spatial-tracking"
+      xr-spatial-tracking
+      execution-while-out-of-viewport
+      execution-while-not-rendered
+      web-share
+      src="https://sketchfab.com/models/8dbc3e99e1ea4ff0a8f32d39c72c4d8d/embed?preload=1&autostart=1&transparent=1&ui_theme=dark&ui_controls=0&ui_infos=0&ui_stop=0">
+    </iframe>
+  </div>
+
   <!-- Scan prompt — visible after TAP TO BEGIN, hides on first detection -->
   <p id="scan-prompt" class="scan-prompt hidden">Point camera at album cover</p>
 

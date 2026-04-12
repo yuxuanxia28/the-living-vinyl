@@ -395,6 +395,7 @@ function startAudio () {
   var audio         = document.getElementById('album-audio');
   var lyricsOverlay = document.getElementById('lyrics-overlay');
   var disc          = document.getElementById('vinyl-disc');
+  var gramophone    = document.getElementById('gramophone-overlay');
 
   // Play directly via the HTML audio element
   if (audio) {
@@ -412,6 +413,9 @@ function startAudio () {
   // Show lyrics overlay
   if (lyricsOverlay) lyricsOverlay.classList.remove('hidden');
 
+  // Show gramophone
+  if (gramophone) gramophone.classList.remove('hidden');
+
   // Start waveform visualizer
   startVisualizer();
 
@@ -426,6 +430,7 @@ function pauseAudio () {
   var audio         = document.getElementById('album-audio');
   var lyricsOverlay = document.getElementById('lyrics-overlay');
   var disc          = document.getElementById('vinyl-disc');
+  var gramophone    = document.getElementById('gramophone-overlay');
 
   // Pause directly via the HTML audio element
   if (audio) audio.pause();
@@ -437,6 +442,9 @@ function pauseAudio () {
 
   // Hide lyrics
   if (lyricsOverlay) lyricsOverlay.classList.add('hidden');
+
+  // Hide gramophone
+  if (gramophone) gramophone.classList.add('hidden');
 
   // Stop and clear the waveform visualizer
   stopVisualizer();
