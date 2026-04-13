@@ -65,8 +65,8 @@ function initParticleSystem() {
   lyricGeo.setAttribute('position', new THREE.BufferAttribute(lyricPositions, 3));
 
   pScene.add(new THREE.Points(lyricGeo, new THREE.PointsMaterial({
-    size: 5,
-    map: makeSprite('rgba(255,240,120,1)', 'rgba(255,160,0,0)', 64),
+    size: 0.2,
+    map: makeSprite('rgba(255,240,120,1)', 'rgba(255,160,0,0)', Math.round(64 * 1.6)),
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     transparent: true
@@ -140,7 +140,7 @@ function sampleTextPositions(text) {
 
   // Responsive font size + simple word-wrap
   var fontSize = Math.min(68, Math.max(28, Math.floor(W / Math.max(text.length * 0.55, 5))));
-  ctx.font      = 'bold ' + fontSize + 'px Georgia, serif';
+  ctx.font      = 'bold ' + fontSize + 'px "Dancing Script", cursive';
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
