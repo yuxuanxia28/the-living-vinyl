@@ -66,10 +66,11 @@ function initParticleSystem() {
 
   pScene.add(new THREE.Points(lyricGeo, new THREE.PointsMaterial({
     size: 0.2,
-    map: makeSprite('rgba(255,240,120,1)', 'rgba(255,160,0,0)', Math.round(64 * 1.6)),
+    map: makeSprite('rgba(255,240,120,1)', 'rgba(255,160,0,1)', Math.round(64 * 1.6)),
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    transparent: true
+    transparent: false,
+    opacity: 1
   })));
 
   // --- Snowflakes (white, normal blend, z = -1 so behind lyrics) ---
