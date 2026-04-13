@@ -65,7 +65,7 @@ function initParticleSystem() {
   lyricGeo.setAttribute('position', new THREE.BufferAttribute(lyricPositions, 3));
 
   pScene.add(new THREE.Points(lyricGeo, new THREE.PointsMaterial({
-    size: 0.4,
+    size: 5,
     map: makeSprite('rgba(255,240,120,1)', 'rgba(255,160,0,0)', 64),
     blending: THREE.AdditiveBlending,
     depthWrite: false,
