@@ -14,6 +14,11 @@ var SONGS = {
     audioId: 'album-audio-2',
     lyrics:  function() { return window.LYRICS2; },
     colors:  { inner: 'rgba(255,182,213,1)', outer: 'rgba(255,100,160,0)' }
+  },
+  'ridin-marker': {
+    audioId: 'album-audio-3',
+    lyrics:  function() { return window.LYRICS3; },
+    colors:  { inner: 'rgba(140,210,255,1)', outer: 'rgba(0,140,255,0)' }
   }
 };
 
@@ -265,16 +270,22 @@ function drawVisualizer() {
   var useBins = Math.floor(dataArray.length * 0.55);
   var barW = (W / useBins) * 0.72, gap = (W / useBins) * 0.28, centerX = W / 2;
 
-  // Bar color matches active song: gold for song 1, pink for song 2
-  var isPink = activeMarkerId === 'breaking-marker';
+  // Bar color matches active song: gold / pink / blue
+  var songColor = activeMarkerId === 'breaking-marker' ? 'pink'
+                : activeMarkerId === 'ridin-marker'    ? 'blue'
+                : 'gold';
 
   for (var i = 0; i < useBins; i++) {
     var barH = Math.max(1, (dataArray[i] / 255) * H * 0.88);
     var grad = vizCtx.createLinearGradient(0, H - barH, 0, H);
-    if (isPink) {
+    if (songColor === 'pink') {
       grad.addColorStop(0,   'rgba(255,200,220,0.95)');
       grad.addColorStop(0.4, 'rgba(255,120,180,0.75)');
       grad.addColorStop(1,   'rgba(220,80,140,0)');
+    } else if (songColor === 'blue') {
+      grad.addColorStop(0,   'rgba(180,230,255,0.95)');
+      grad.addColorStop(0.4, 'rgba(80,170,255,0.75)');
+      grad.addColorStop(1,   'rgba(0,100,220,0)');
     } else {
       grad.addColorStop(0,   'rgba(255,230,140,0.95)');
       grad.addColorStop(0.4, 'rgba(232,180,80,0.75)');
@@ -292,7 +303,9 @@ function drawVisualizer() {
   }
   vizCtx.beginPath();
   vizCtx.moveTo(0, H - 1); vizCtx.lineTo(W, H - 1);
-  vizCtx.strokeStyle = isPink ? 'rgba(255,150,200,0.25)' : 'rgba(232,201,122,0.25)';
+  vizCtx.strokeStyle = songColor === 'pink' ? 'rgba(255,150,200,0.25)'
+                     : songColor === 'blue' ? 'rgba(80,170,255,0.25)'
+                     : 'rgba(232,201,122,0.25)';
   vizCtx.lineWidth = 1; vizCtx.stroke();
 }
 
@@ -391,8 +404,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (a1) a1.load();
     if (a2) a2.load();
 
-    // Connect both audio elements to the same analyser so both songs drive the visualizer
-    initVisualizer([a1, a2]);
+    var a3 = document.getElementById('album-audio-3');
+    if (a3) a3.load();
+
+    // Connect all audio elements to the same analyser so every song drives the visualizer
+    initVisualizer([a1, a2, a3]);
 
     if (audioCtx) {
       audioCtx.resume().then(function() {
@@ -413,8 +429,8 @@ document.addEventListener('DOMContentLoaded', function() {
   scene.addEventListener('arjs-video-loaded', hideLoader);
   setTimeout(hideLoader, 8000);
 
-  // Wire both markers
-  ['cover-marker', 'breaking-marker'].forEach(function(id) {
+  // Wire all markers
+  ['cover-marker', 'breaking-marker', 'ridin-marker'].forEach(function(id) {
     var marker = document.getElementById(id);
     if (!marker) return;
 
