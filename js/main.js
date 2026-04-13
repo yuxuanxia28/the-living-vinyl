@@ -349,10 +349,16 @@ document.addEventListener('DOMContentLoaded', function() {
   // Start snowflakes immediately (no user gesture needed for Three.js canvas)
   initParticleSystem();
 
-  // Tap to Begin — unlocks iOS AudioContext, inits Web Audio graph
+  // Tap to Begin — unlocks iOS AudioContext, inits Web Audio graph,
+  // and starts buffering the MP3 immediately so it's ready by marker scan.
   startBtn.addEventListener('click', function() {
     window.userInteracted = true;
     startBtn.classList.add('hidden');
+
+    // Start downloading the audio file now, in the background
+    var audio = document.getElementById('album-audio');
+    if (audio) audio.load();
+
     initVisualizer();
     if (audioCtx) {
       audioCtx.resume().then(function() {
