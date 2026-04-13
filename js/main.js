@@ -66,11 +66,10 @@ function initParticleSystem() {
 
   pScene.add(new THREE.Points(lyricGeo, new THREE.PointsMaterial({
     size: 5,
-    map: makeSprite('rgba(255,245,180,1)', 'rgba(255,200,60,0.9)', 128),
+    map: makeSprite('rgba(255,240,120,1)', 'rgba(255,160,0,0)', 64),
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    transparent: true,
-    opacity: 1
+    transparent: true
   })));
 
   // --- Snowflakes (white, normal blend, z = -1 so behind lyrics) ---
@@ -140,8 +139,8 @@ function sampleTextPositions(text) {
   var ctx = c.getContext('2d');
 
   // Responsive font size + simple word-wrap
-  var fontSize = Math.min(88, Math.max(40, Math.floor(W / Math.max(text.length * 0.45, 4))));
-  ctx.font      = 'bold ' + fontSize + 'px "Dancing Script", cursive';
+  var fontSize = Math.min(68, Math.max(28, Math.floor(W / Math.max(text.length * 0.55, 5))));
+  ctx.font      = 'bold ' + fontSize + 'px Georgia, serif';
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -161,11 +160,11 @@ function sampleTextPositions(text) {
   var startY = H / 2 - (lines.length - 1) * lineH / 2;
   lines.forEach(function(l, i) { ctx.fillText(l, W / 2, startY + i * lineH); });
 
-  // Collect lit pixels (step 1 = every pixel, denser shape)
+  // Collect every lit pixel (step 2 for performance)
   var data = ctx.getImageData(0, 0, W, H).data;
   var pts  = [];
-  for (var y = 0; y < H; y += 1) {
-    for (var x = 0; x < W; x += 1) {
+  for (var y = 0; y < H; y += 2) {
+    for (var x = 0; x < W; x += 2) {
       if (data[(y * W + x) * 4 + 3] > 100) {
         pts.push(x - W / 2, H / 2 - y);
       }
