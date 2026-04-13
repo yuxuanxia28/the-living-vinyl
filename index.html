@@ -10,6 +10,7 @@
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <script src="js/lyrics-data.js"></script>
+  <script src="js/lyrics-data-2.js"></script>
   <script src="js/main.js"></script>
 </head>
 
@@ -41,12 +42,21 @@
 
     <a-assets timeout="10000">
       <audio id="album-audio" src="https://res.cloudinary.com/dqtd6ea9p/video/upload/v1776044188/music_axg0ly.mp3" preload="none" crossorigin="anonymous"></audio>
+      <audio id="album-audio-2" src="assets/music2.mp3" preload="none" crossorigin="anonymous"></audio>
     </a-assets>
 
     <a-marker
       id="cover-marker"
       type="pattern"
       url="assets/markers/cover.patt"
+      smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5"
+      emitevents="true">
+    </a-marker>
+
+    <a-marker
+      id="breaking-marker"
+      type="pattern"
+      url="assets/markers/breaking-my-heart.patt"
       smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5"
       emitevents="true">
     </a-marker>
