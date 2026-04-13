@@ -313,7 +313,11 @@ function startAudio(markerId) {
 
   activeMarkerId = markerId;
   setParticleColor(song.colors);
-  currentLyricIndex = -1;
+  currentLyricIndex = 0;
+
+  // Show first lyric immediately — don't wait for the lyricsLoop frame
+  var firstLyrics = song.lyrics();
+  if (firstLyrics && firstLyrics.length > 0) setLyricTarget(firstLyrics[0].text);
 
   audio.loop = true;
   audio.play().catch(function(e) { console.warn(e); });
