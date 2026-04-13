@@ -207,7 +207,7 @@ function setLyricTarget(text) {
 var vizInitialized = false, audioCtx = null, analyser = null;
 var dataArray = null, vizAnimId = null, vizCanvas = null, vizCtx = null;
 
-function initVisualizer(audioEl) {
+function initVisualizer(audioEls) {
   if (vizInitialized) return;
   vizInitialized = true;
 
@@ -216,13 +216,21 @@ function initVisualizer(audioEl) {
   resizeVisualizer();
   window.addEventListener('resize', resizeVisualizer);
 
-  audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
-  var source = audioCtx.createMediaElementSource(audioEl);
-  analyser   = audioCtx.createAnalyser();
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
   analyser.smoothingTimeConstant = 0.78;
-  source.connect(analyser);
   analyser.connect(audioCtx.destination);
+
+  // Connect every audio element so both songs drive the same analyser
+  var els = Array.isArray(audioEls) ? audioEls : [audioEls];
+  els.forEach(function(el) {
+    if (el) {
+      var src = audioCtx.createMediaElementSource(el);
+      src.connect(analyser);
+    }
+  });
+
   dataArray = new Uint8Array(analyser.frequencyBinCount);
 }
 
@@ -383,9 +391,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (a1) a1.load();
     if (a2) a2.load();
 
-    // Init visualizer wired to song 1 audio (reconnecting mid-session
-    // isn't possible with createMediaElementSource — song 1 drives the analyser)
-    if (a1) initVisualizer(a1);
+    // Connect both audio elements to the same analyser so both songs drive the visualizer
+    initVisualizer([a1, a2]);
 
     if (audioCtx) {
       audioCtx.resume().then(function() {
